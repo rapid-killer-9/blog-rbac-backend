@@ -1,0 +1,253 @@
+{
+    "info": {
+      "name": "Blog Management API",
+      "description": "Postman collection for testing authentication, user management, and blog management features of the backend.",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Authentication",
+        "item": [
+          {
+            "name": "Signup",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/auth/signup",
+                "host": ["http://localhost:3000"],
+                "path": ["auth", "signup"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Login",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/auth/login",
+                "host": ["http://localhost:3000"],
+                "path": ["auth", "login"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Logout",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/auth/logout",
+                "host": ["http://localhost:3000"],
+                "path": ["auth", "logout"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "User Management (Admin Only)",
+        "item": [
+          {
+            "name": "Get All Users",
+            "request": {
+              "method": "GET",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/users",
+                "host": ["http://localhost:3000"],
+                "path": ["users"]
+              }
+            }
+          },
+          {
+            "name": "Get User by ID",
+            "request": {
+              "method": "GET",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/users/:id",
+                "host": ["http://localhost:3000"],
+                "path": ["users", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Create User",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/users",
+                "host": ["http://localhost:3000"],
+                "path": ["users"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"USER\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Update User",
+            "request": {
+              "method": "PATCH",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/users/:id",
+                "host": ["http://localhost:3000"],
+                "path": ["users", ":id"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"role\": \"MODERATOR\",\n  \"username\": \"updateduser\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Delete User",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/users/:id",
+                "host": ["http://localhost:3000"],
+                "path": ["users", ":id"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Blog Management",
+        "item": [
+          {
+            "name": "Get All Blogs (Admin/Moderator)",
+            "request": {
+              "method": "GET",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/blogs",
+                "host": ["http://localhost:3000"],
+                "path": ["blogs"]
+              }
+            }
+          },
+          {
+            "name": "Get User's Drafts",
+            "request": {
+              "method": "GET",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/blogs/my-drafts",
+                "host": ["http://localhost:3000"],
+                "path": ["blogs", "my-drafts"]
+              }
+            }
+          },
+          {
+            "name": "Create Blog",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/blogs",
+                "host": ["http://localhost:3000"],
+                "path": ["blogs"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"My First Blog\",\n  \"content\": \"This is a draft blog.\",\n  \"tags\": [\"personal\", \"draft\"]\n}"
+              }
+            }
+          },
+          {
+            "name": "Update Blog",
+            "request": {
+              "method": "PATCH",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" },
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/blogs/:id",
+                "host": ["http://localhost:3000"],
+                "path": ["blogs", ":id"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Updated Blog Title\",\n  \"content\": \"Updated content here.\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Approve Blog (Moderator/Admin)",
+            "request": {
+              "method": "PATCH",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/blogs/:id/approve",
+                "host": ["http://localhost:3000"],
+                "path": ["blogs", ":id", "approve"]
+              },
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"status\": \"APPROVED\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Delete Blog (Admin Only)",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{token}}" }
+              ],
+              "url": {
+                "raw": "http://localhost:3000/blogs/:id",
+                "host": ["http://localhost:3000"],
+                "path": ["blogs", ":id"]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+  
