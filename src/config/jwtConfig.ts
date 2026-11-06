@@ -27,12 +27,7 @@ export const verifyToken = (token: string): TokenPayload => {
   }
 };
 
-// Decode the JWT token
+// Decode the JWT token without verification (use only for non-security-sensitive reads)
 export const decodeToken = (token: string): TokenPayload | null => {
   return jwt.decode(token) as TokenPayload | null;
-};
-
-// Generate a refresh token
-export const generateRefreshToken = (payload: TokenPayload): string => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: '7d' }); // Longer expiration for refresh token
 };

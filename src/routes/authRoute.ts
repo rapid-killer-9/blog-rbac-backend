@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { Signup, Login,Profile } from '../controllers/authController';
+import { Signup, Login, Profile, Refresh, Logout } from '../controllers/authController';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { UserRole } from '@prisma/client';
 
@@ -21,12 +21,14 @@ router.post('/signup', authLimiter, Signup);
 // Login route
 router.post('/login', authLimiter, Login);
 
+// Token refresh — no authentication required (the refresh token is the credential)
+router.post('/refresh', Refresh);
+
+// Logout — revoke the refresh token
+router.post('/logout', Logout);
+
 // Profile route (requires authentication)
-router.get(
-  '/profile',
-  authenticate, // Check if the user is logged in
-  Profile
-);
+router.get('/profile', authenticate, Profile);
 
 // Example of role-based route (Admin-only)
 router.get(

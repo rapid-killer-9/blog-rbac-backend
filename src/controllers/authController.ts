@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { signup, login, getUserProfile } from '../services/authService';
+import { signup, login, getUserProfile, rotateRefreshToken, logoutUser } from '../services/authService';
 import { validateSignup, validateLogin } from '../utils/validationUtil';
 
 // Signup
@@ -29,21 +29,50 @@ export const Signup = async (req: Request, res: Response) => {
 // Login
 export const Login = async (req: Request, res: Response) => {
   try {
-    // Validate input
     const { email, password } = await validateLogin(req.body);
 
-    // Authenticate user
-    const { token, user } = await login(email, password);
+    const { accessToken, refreshToken, user } = await login(email, password);
 
     res.json({
       message: 'Login successful',
-      token,
-      user
+      accessToken,
+      refreshToken,
+      user,
     });
   } catch (error: any) {
-    res.status(401).json({ 
-      message: error.message 
-    });
+    res.status(401).json({ message: error.message });
+  }
+};
+
+// Refresh — exchange a valid refresh token for a new access + refresh token pair
+export const Refresh = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken || typeof refreshToken !== 'string') {
+      res.status(400).json({ message: 'refreshToken is required' });
+      return;
+    }
+
+    const tokens = await rotateRefreshToken(refreshToken);
+    res.json(tokens);
+  } catch (error: any) {
+    res.status(401).json({ message: error.message });
+  }
+};
+
+// Logout — revoke the supplied refresh token
+export const Logout = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken || typeof refreshToken !== 'string') {
+      res.status(400).json({ message: 'refreshToken is required' });
+      return;
+    }
+
+    await logoutUser(refreshToken);
+    res.json({ message: 'Logged out successfully' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
   }
 };
 
