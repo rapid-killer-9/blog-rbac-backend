@@ -1,18 +1,10 @@
 import { Request, Response } from 'express';
 import { createBlog, getBlogsByRole, updateBlogStatus} from '../services/blogService';
 import { validateBlogCreation } from '../utils/validationUtil';
-import { BlogStatus, UserRole } from '@prisma/client';
-import { promises } from 'dns';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-  };
-}
+import { BlogStatus } from '@prisma/client';
 
 // Create Blog
-export const CreateBlog = async (req: AuthRequest, res: Response): Promise<void> => {
+export const CreateBlog = async (req: Request, res: Response): Promise<void> => {
   try {
     const authorId = req.user?.id;
 
@@ -42,7 +34,7 @@ export const CreateBlog = async (req: AuthRequest, res: Response): Promise<void>
 };
 
 // Get Blogs
-export const GetBlogs = async (req: AuthRequest, res: Response): Promise<void> => {
+export const GetBlogs = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
     const userRole = req.user?.role;
@@ -62,7 +54,7 @@ export const GetBlogs = async (req: AuthRequest, res: Response): Promise<void> =
 };
 
 // Update Blog Status
-export const UpdateBlogStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+export const UpdateBlogStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { status } = req.body;

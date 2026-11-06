@@ -1,8 +1,7 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../config/jwtConfig';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 // Signup function
 export const signup = async ({ username, email, password }: { username: string; email: string; password: string }) => {

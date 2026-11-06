@@ -1,16 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, } from '../config/jwtConfig';
+import { verifyToken } from '../config/jwtConfig';
 import { UserRole } from '@prisma/client';
 
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-  };
-}
-
 // Authentication Middleware
-export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const token = req.headers.authorization?.split(' ')[1]; // Extract Bearer token
 
   if (!token) {
@@ -32,7 +25,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
 // Authorization Middleware
 export const authorize = (roles: UserRole[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const userRole = req.user?.role;
 
     if (!userRole || !roles.includes(userRole)) {

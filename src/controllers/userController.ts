@@ -1,17 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { updateUserProfile, getAllUsers, getUserById} from '../services/userService';
 import { validateProfileUpdate } from '../utils/validationUtil';
-import { UserRole } from '@prisma/client';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-  };
-}
 
 // Update Profile
-export const UpdateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const UpdateProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user?.id;
 
@@ -50,7 +42,7 @@ export const GetAllUsers = async (req: Request, res: Response) => {
 };
 
 // Get User by ID
-export const GetUserById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const GetUserById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
     const user = await getUserById(id);

@@ -1,6 +1,5 @@
-import { PrismaClient, BlogStatus, UserRole } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { BlogStatus, UserRole } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 // Create blog function
 export const createBlog = async ({

@@ -1,7 +1,6 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
 
 // Route imports
 import authRoutes from './routes/authRoute';
@@ -11,9 +10,7 @@ import blogRoutes from './routes/blogRoute';
 // Middleware imports
 import { errorHandler } from './middlewares/errorMiddleware';
 import { errorLoggingMiddleware, loggingMiddleware } from './middlewares/loggingMiddleware';
-
-// Initialize Prisma Client
-const prisma = new PrismaClient();
+import prisma from './lib/prisma';
 
 // Create an instance of Express
 const app = express();

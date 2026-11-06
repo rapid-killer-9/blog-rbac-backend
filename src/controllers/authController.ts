@@ -1,14 +1,6 @@
 import { Request, Response } from 'express';
 import { signup, login, getUserProfile } from '../services/authService';
 import { validateSignup, validateLogin } from '../utils/validationUtil';
-import { UserRole } from '@prisma/client';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-  };
-}
 
 // Signup
 export const Signup = async (req: Request, res: Response) => {
@@ -56,7 +48,7 @@ export const Login = async (req: Request, res: Response) => {
 };
 
 // Profile
-export const Profile = async (req: AuthRequest, res: Response): Promise<void> => {
+export const Profile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
 
