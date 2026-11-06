@@ -62,11 +62,11 @@ export const getBlogsByRole = async (
   const baseInclude = { tags: true };
   const adminModInclude = { author: { select: { username: true, email: true } }, tags: true };
 
-  let where = {};
+  let where: Record<string, unknown> = { deletedAt: null };
   if (userRole === UserRole.MODERATOR) {
-    where = { status: { in: [BlogStatus.DRAFT, BlogStatus.PENDING] } };
+    where = { deletedAt: null, status: { in: [BlogStatus.DRAFT, BlogStatus.PENDING] } };
   } else if (userRole === UserRole.USER) {
-    where = { authorId: userId };
+    where = { deletedAt: null, authorId: userId };
   }
 
   const include = userRole === UserRole.USER ? baseInclude : adminModInclude;
@@ -77,6 +77,46 @@ export const getBlogsByRole = async (
   ]);
 
   return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+};
+
+// Soft-delete a blog — only the author or an ADMIN may delete
+export const deleteBlog = async (blogId: string, requesterId: string, requesterRole: UserRole) => {
+  const blog = await prisma.blog.findUnique({ where: { id: blogId } });
+
+  if (!blog || blog.deletedAt) {
+    throw new Error('Blog not found');
+  }
+
+  if (requesterRole !== UserRole.ADMIN && blog.authorId !== requesterId) {
+    throw new Error('Forbidden: you can only delete your own posts');
+  }
+
+  return prisma.blog.update({
+    where: { id: blogId },
+    data: { deletedAt: new Date() },
+  });
+};
+
+// Restore a soft-deleted blog — ADMIN only
+export const restoreBlog = async (blogId: string, requesterRole: UserRole) => {
+  if (requesterRole !== UserRole.ADMIN) {
+    throw new Error('Forbidden: only admins can restore posts');
+  }
+
+  const blog = await prisma.blog.findUnique({ where: { id: blogId } });
+
+  if (!blog) {
+    throw new Error('Blog not found');
+  }
+
+  if (!blog.deletedAt) {
+    throw new Error('Blog is not deleted');
+  }
+
+  return prisma.blog.update({
+    where: { id: blogId },
+    data: { deletedAt: null },
+  });
 };
 
 // Update blog status function

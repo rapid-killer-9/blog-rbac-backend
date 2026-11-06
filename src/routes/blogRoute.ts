@@ -1,5 +1,5 @@
 import express from 'express';
-import { CreateBlog, GetBlogs, UpdateBlogStatus } from '../controllers/blogController';
+import { CreateBlog, GetBlogs, UpdateBlogStatus, DeleteBlog, RestoreBlog } from '../controllers/blogController';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { UserRole } from '@prisma/client';
 
@@ -22,9 +22,15 @@ router.get(
 // Update blog status (Admin or Moderator)
 router.patch(
   '/:id/status',
-  authenticate, // Requires user to be authenticated
-  authorize([UserRole.ADMIN, UserRole.MODERATOR]), // Only Admins or Moderators can update status
+  authenticate,
+  authorize([UserRole.ADMIN, UserRole.MODERATOR]),
   UpdateBlogStatus
 );
+
+// Soft-delete a blog (author or Admin)
+router.delete('/:id', authenticate, DeleteBlog);
+
+// Restore a soft-deleted blog (Admin only)
+router.post('/:id/restore', authenticate, authorize([UserRole.ADMIN]), RestoreBlog);
 
 export default router;
