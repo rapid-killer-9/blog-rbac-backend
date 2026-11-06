@@ -1,6 +1,15 @@
-// src/middlewares/loggingMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import winston from 'winston';
+
+const REDACTED_FIELDS = new Set(['password', 'token', 'authorization']);
+
+function redactBody(body: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body)) {
+    out[k] = REDACTED_FIELDS.has(k.toLowerCase()) ? '[REDACTED]' : v;
+  }
+  return out;
+}
 
 // Create a logger with both console and file transport
 const logger = winston.createLogger({
@@ -35,37 +44,24 @@ export const loggingMiddleware = () => {
     const originalJson = res.json;
     const originalSend = res.send;
 
+    const logEntry = () => ({
+      method: req.method,
+      path: req.path,
+      body: req.body && typeof req.body === 'object' ? redactBody(req.body) : req.body,
+      params: req.params,
+      query: req.query,
+      timestamp: new Date().toISOString()
+    });
+
     // Override res.json
     res.json = function(body: any) {
-      // Log request details
-      logger.info(JSON.stringify({
-        method: req.method,
-        path: req.path,
-        body: req.body,
-        params: req.params,
-        query: req.query,
-        responseBody: body,
-        timestamp: new Date().toISOString()
-      }));
-
-      // Call the original json method
+      logger.info(JSON.stringify({ ...logEntry(), statusCode: res.statusCode }));
       return originalJson.call(this, body);
     };
 
     // Override res.send
     res.send = function(body?: any) {
-      // Log request details
-      logger.info(JSON.stringify({
-        method: req.method,
-        path: req.path,
-        body: req.body,
-        params: req.params,
-        query: req.query,
-        responseBody: body,
-        timestamp: new Date().toISOString()
-      }));
-
-      // Call the original send method
+      logger.info(JSON.stringify({ ...logEntry(), statusCode: res.statusCode }));
       return originalSend.call(this, body);
     };
 
@@ -88,7 +84,7 @@ export const errorLoggingMiddleware = (
       message: err.message,
       stack: err.stack
     },
-    body: req.body,
+    body: req.body && typeof req.body === 'object' ? redactBody(req.body) : req.body,
     params: req.params,
     query: req.query,
     timestamp: new Date().toISOString()

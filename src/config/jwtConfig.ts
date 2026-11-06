@@ -6,7 +6,11 @@ interface TokenPayload {
   role: User['role'];
 }
 
-const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
+const SECRET_KEY = process.env.JWT_SECRET;
+if (!SECRET_KEY) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
 const EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 // Generate a JWT token
