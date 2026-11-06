@@ -40,15 +40,19 @@ export const GetBlogs = async (req: Request, res: Response): Promise<void> => {
     const userRole = req.user?.role;
 
     if (!userId || !userRole) {
-      return; 
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
     }
 
-    const blogs = await getBlogsByRole(userId, userRole);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
 
-    res.json(blogs);
+    const result = await getBlogsByRole(userId, userRole, { page, limit });
+
+    res.json(result);
   } catch (error: any) {
-    res.status(500).json({ 
-      message: error.message 
+    res.status(500).json({
+      message: error.message
     });
   }
 };

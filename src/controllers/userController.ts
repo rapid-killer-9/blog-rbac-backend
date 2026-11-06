@@ -31,12 +31,15 @@ export const UpdateProfile = async (req: Request, res: Response, next: NextFunct
 // Get All Users
 export const GetAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await getAllUsers();
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
 
-    res.json(users);
+    const result = await getAllUsers({ page, limit });
+
+    res.json(result);
   } catch (error: any) {
-    res.status(500).json({ 
-      message: error.message 
+    res.status(500).json({
+      message: error.message
     });
   }
 };

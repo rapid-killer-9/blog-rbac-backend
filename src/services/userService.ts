@@ -25,17 +25,22 @@ export const updateUserProfile = async (
   return profile;
 };
 
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
 // Get all users function
-export const getAllUsers = async () => {
-  return prisma.user.findMany({
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      role: true,
-      createdAt: true,
-    },
-  });
+export const getAllUsers = async ({ page, limit }: PaginationParams) => {
+  const skip = (page - 1) * limit;
+  const select = { id: true, username: true, email: true, role: true, createdAt: true };
+
+  const [data, total] = await Promise.all([
+    prisma.user.findMany({ select, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+    prisma.user.count(),
+  ]);
+
+  return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };
 
 // Get user by ID function

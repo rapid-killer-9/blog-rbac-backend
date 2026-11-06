@@ -41,34 +41,42 @@ export const createBlog = async ({
   return blog;
 };
 
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
 // Get blogs by user role function
-export const getBlogsByRole = async (userId: string, userRole: UserRole) => {
-  if (userRole === UserRole.ADMIN) {
-    // Admin can see all blogs
-    return prisma.blog.findMany({
-      include: {
-        author: { select: { username: true, email: true } },
-        tags: true,
-      },
-    });
-  } else if (userRole === UserRole.MODERATOR) {
-    // Moderator can see blogs in PENDING or DRAFT status
-    return prisma.blog.findMany({
-      where: {
-        status: { in: [BlogStatus.DRAFT, BlogStatus.PENDING] },
-      },
-      include: {
-        author: { select: { username: true, email: true } },
-        tags: true,
-      },
-    });
-  } else {
-    // Regular user can only see their own blogs
-    return prisma.blog.findMany({
-      where: { authorId: userId },
-      include: { tags: true },
-    });
+export const getBlogsByRole = async (
+  userId: string,
+  userRole: UserRole,
+  { page, limit }: PaginationParams
+): Promise<PaginatedResult<any>> => {
+  const skip = (page - 1) * limit;
+
+  const baseInclude = { tags: true };
+  const adminModInclude = { author: { select: { username: true, email: true } }, tags: true };
+
+  let where = {};
+  if (userRole === UserRole.MODERATOR) {
+    where = { status: { in: [BlogStatus.DRAFT, BlogStatus.PENDING] } };
+  } else if (userRole === UserRole.USER) {
+    where = { authorId: userId };
   }
+
+  const include = userRole === UserRole.USER ? baseInclude : adminModInclude;
+
+  const [data, total] = await Promise.all([
+    prisma.blog.findMany({ where, include, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+    prisma.blog.count({ where }),
+  ]);
+
+  return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };
 
 // Update blog status function
