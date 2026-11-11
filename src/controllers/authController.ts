@@ -20,9 +20,7 @@ export const Signup = async (req: Request, res: Response) => {
       user
     });
   } catch (error: any) {
-    res.status(400).json({ 
-      message: error.message 
-    });
+    res.status(error.statusCode ?? 400).json({ message: error.message });
   }
 };
 
@@ -40,7 +38,7 @@ export const Login = async (req: Request, res: Response) => {
       user,
     });
   } catch (error: any) {
-    res.status(401).json({ message: error.message });
+    res.status(error.statusCode ?? 401).json({ message: error.message });
   }
 };
 
@@ -56,7 +54,7 @@ export const Refresh = async (req: Request, res: Response): Promise<void> => {
     const tokens = await rotateRefreshToken(refreshToken);
     res.json(tokens);
   } catch (error: any) {
-    res.status(401).json({ message: error.message });
+    res.status(error.statusCode ?? 401).json({ message: error.message });
   }
 };
 
@@ -72,7 +70,7 @@ export const Logout = async (req: Request, res: Response): Promise<void> => {
     await logoutUser(refreshToken);
     res.json({ message: 'Logged out successfully' });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode ?? 500).json({ message: error.message });
   }
 };
 
@@ -90,8 +88,6 @@ export const Profile = async (req: Request, res: Response): Promise<void> => {
 
     res.json(profile); // Send the profile response
   } catch (error: any) {
-    res.status(500).json({
-      message: error.message
-    });
+    res.status(error.statusCode ?? 500).json({ message: error.message });
   }
 };

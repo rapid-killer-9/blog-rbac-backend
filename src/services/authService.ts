@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../config/jwtConfig';
 import { generateRawToken, hashToken } from '../utils/tokenUtil';
+import { unauthorized, notFound } from '../utils/errorUtil';
 import prisma from '../lib/prisma';
 
 const REFRESH_TOKEN_TTL_DAYS = 7;
@@ -45,7 +46,7 @@ export const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    throw new Error('Invalid email or password');
+    throw unauthorized('Invalid email or password');
   }
 
   const accessToken = generateToken({ userId: user.id, role: user.role });
@@ -72,7 +73,7 @@ export const rotateRefreshToken = async (rawToken: string) => {
         data: { revokedAt: new Date() },
       });
     }
-    throw new Error('Invalid or expired refresh token');
+    throw unauthorized('Invalid or expired refresh token');
   }
 
   // Revoke the used token before issuing a new one (rotation)
@@ -106,7 +107,7 @@ export const getUserProfile = async (userId: string) => {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw notFound('User not found');
   }
 
   return { id: user.id, username: user.username, email: user.email, profile: user.profile };
