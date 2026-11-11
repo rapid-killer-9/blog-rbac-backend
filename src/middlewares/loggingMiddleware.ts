@@ -42,7 +42,6 @@ export const loggingMiddleware = () => {
   return (req: Request, res: Response, next: NextFunction) => {
     // Capture the original res.json and res.send methods
     const originalJson = res.json;
-    const originalSend = res.send;
 
     const logEntry = () => ({
       method: req.method,
@@ -53,16 +52,11 @@ export const loggingMiddleware = () => {
       timestamp: new Date().toISOString()
     });
 
-    // Override res.json
+    // Override only res.json — Express's json() calls send() internally, so overriding
+    // both would produce two log entries per response.
     res.json = function(body: any) {
       logger.info(JSON.stringify({ ...logEntry(), statusCode: res.statusCode }));
       return originalJson.call(this, body);
-    };
-
-    // Override res.send
-    res.send = function(body?: any) {
-      logger.info(JSON.stringify({ ...logEntry(), statusCode: res.statusCode }));
-      return originalSend.call(this, body);
     };
 
     next();
