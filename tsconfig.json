@@ -1,6 +1,8 @@
 {
+  "ts-node": {
+    "files": true
+  },
   "compilerOptions": {
-    "types": ["node", "express"],
     "target": "ES6",
     "module": "commonjs",
     "strict": true,
