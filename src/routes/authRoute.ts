@@ -1,19 +1,10 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import { Signup, Login, Profile, Refresh, Logout } from '../controllers/authController';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { UserRole } from '@prisma/client';
+import { authLimiter, tokenLimiter } from '../config/rateLimiter';
 
 const router = express.Router();
-
-// Stricter limit on credential endpoints to slow brute-force attempts.
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: 'Too many requests, please try again later.' }
-});
 
 // Signup route
 router.post('/signup', authLimiter, Signup);
@@ -22,10 +13,10 @@ router.post('/signup', authLimiter, Signup);
 router.post('/login', authLimiter, Login);
 
 // Token refresh — no authentication required (the refresh token is the credential)
-router.post('/refresh', Refresh);
+router.post('/refresh', tokenLimiter, Refresh);
 
 // Logout — revoke the refresh token
-router.post('/logout', Logout);
+router.post('/logout', tokenLimiter, Logout);
 
 // Profile route (requires authentication)
 router.get('/profile', authenticate, Profile);
