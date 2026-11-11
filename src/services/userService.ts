@@ -5,24 +5,11 @@ export const updateUserProfile = async (
   userId: string,
   profileData: { bio?: string; location?: string }
 ) => {
-  // Check if the user has a profile; if not, create it
-  let profile = await prisma.profile.findUnique({
+  return prisma.profile.upsert({
     where: { userId },
+    create: { userId, ...profileData },
+    update: profileData,
   });
-
-  if (!profile) {
-    profile = await prisma.profile.create({
-      data: { userId, ...profileData },
-    });
-  } else {
-    // Update the existing profile
-    profile = await prisma.profile.update({
-      where: { userId },
-      data: profileData,
-    });
-  }
-
-  return profile;
 };
 
 export interface PaginationParams {
