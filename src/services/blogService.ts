@@ -1,4 +1,5 @@
 import { BlogStatus, UserRole } from '@prisma/client';
+import { forbidden, notFound, badRequest } from '../utils/errorUtil';
 import prisma from '../lib/prisma';
 
 // Create blog function
@@ -46,6 +47,12 @@ export interface PaginationParams {
   limit: number;
 }
 
+export interface FilterParams {
+  status?: BlogStatus;
+  tag?: string;
+  q?: string;
+}
+
 export interface PaginatedResult<T> {
   data: T[];
   meta: { total: number; page: number; limit: number; totalPages: number };
@@ -55,18 +62,42 @@ export interface PaginatedResult<T> {
 export const getBlogsByRole = async (
   userId: string,
   userRole: UserRole,
-  { page, limit }: PaginationParams
+  { page, limit }: PaginationParams,
+  filters: FilterParams = {}
 ): Promise<PaginatedResult<any>> => {
   const skip = (page - 1) * limit;
 
   const baseInclude = { tags: true };
   const adminModInclude = { author: { select: { username: true, email: true } }, tags: true };
 
-  let where: Record<string, unknown> = { deletedAt: null };
+  // Base role-scoped where clause
+  let where: Record<string, any> = { deletedAt: null };
   if (userRole === UserRole.MODERATOR) {
-    where = { deletedAt: null, status: { in: [BlogStatus.DRAFT, BlogStatus.PENDING] } };
+    where.status = { in: [BlogStatus.DRAFT, BlogStatus.PENDING] };
   } else if (userRole === UserRole.USER) {
-    where = { deletedAt: null, authorId: userId };
+    where.authorId = userId;
+  }
+
+  // Apply optional filters on top of the role filter
+  if (filters.status) {
+    // For MODERATOR: intersect requested status with their allowed statuses
+    if (userRole === UserRole.MODERATOR) {
+      const allowed: BlogStatus[] = [BlogStatus.DRAFT, BlogStatus.PENDING];
+      where.status = allowed.includes(filters.status) ? filters.status : { in: [] };
+    } else {
+      where.status = filters.status;
+    }
+  }
+
+  if (filters.tag) {
+    where.tags = { some: { name: { equals: filters.tag, mode: 'insensitive' } } };
+  }
+
+  if (filters.q) {
+    where.OR = [
+      { title: { contains: filters.q, mode: 'insensitive' } },
+      { content: { contains: filters.q, mode: 'insensitive' } },
+    ];
   }
 
   const include = userRole === UserRole.USER ? baseInclude : adminModInclude;
@@ -84,11 +115,11 @@ export const deleteBlog = async (blogId: string, requesterId: string, requesterR
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
 
   if (!blog || blog.deletedAt) {
-    throw new Error('Blog not found');
+    throw notFound('Blog not found');
   }
 
   if (requesterRole !== UserRole.ADMIN && blog.authorId !== requesterId) {
-    throw new Error('Forbidden: you can only delete your own posts');
+    throw forbidden('Forbidden: you can only delete your own posts');
   }
 
   return prisma.blog.update({
@@ -100,17 +131,17 @@ export const deleteBlog = async (blogId: string, requesterId: string, requesterR
 // Restore a soft-deleted blog — ADMIN only
 export const restoreBlog = async (blogId: string, requesterRole: UserRole) => {
   if (requesterRole !== UserRole.ADMIN) {
-    throw new Error('Forbidden: only admins can restore posts');
+    throw forbidden('Forbidden: only admins can restore posts');
   }
 
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
 
   if (!blog) {
-    throw new Error('Blog not found');
+    throw notFound('Blog not found');
   }
 
   if (!blog.deletedAt) {
-    throw new Error('Blog is not deleted');
+    throw badRequest('Blog is not deleted');
   }
 
   return prisma.blog.update({
@@ -127,7 +158,7 @@ export const updateBlogStatus = async (
 ) => {
   // Only Admin or Moderator can update the blog status
   if (![UserRole.ADMIN, UserRole.MODERATOR].find((role) => role === userRole)) {
-    throw new Error('Insufficient permissions to update blog status');
+    throw forbidden('Insufficient permissions to update blog status');
   }
 
   const blog = await prisma.blog.update({
