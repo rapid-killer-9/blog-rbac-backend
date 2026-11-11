@@ -1,30 +1,36 @@
 import { z } from 'zod';
+import { BlogStatus } from '@prisma/client';
 
 // Signup validation schema
 const signupSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters')
-});
+}).strict();
 
 // Login validation schema
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required')
-});
+}).strict();
 
 // Blog creation validation schema
 const blogCreationSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   content: z.string().min(10, 'Content must be at least 10 characters'),
   tags: z.array(z.string()).optional()
-});
+}).strict();
 
 // Profile update validation schema
 const profileUpdateSchema = z.object({
   bio: z.string().optional(),
   location: z.string().optional()
-});
+}).strict();
+
+// Blog status update validation schema
+const blogStatusUpdateSchema = z.object({
+  status: z.nativeEnum(BlogStatus),
+}).strict();
 
 // Validation functions
 export const validateSignup = async (data: unknown) => {
@@ -41,4 +47,8 @@ export const validateBlogCreation = async (data: unknown) => {
 
 export const validateProfileUpdate = async (data: unknown) => {
   return profileUpdateSchema.parse(data);
+};
+
+export const validateBlogStatusUpdate = async (data: unknown) => {
+  return blogStatusUpdateSchema.parse(data);
 };
